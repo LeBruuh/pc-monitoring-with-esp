@@ -23,8 +23,17 @@ I used following components. The prices are from 1. December 2025.
 
 - Overall price: 42,15 €
 
-## Structure
-This section is about how you have to plug your wires to get the correct result. You can vary which pins you use when you feel comfortable or you want to add function.
-My build works with these exact components. Other components can be configurated differently.
+## Arduino
+TODO: intro
 
-### TODO
+### Wiring
+The first important step is to wire the arduino correctly. Especially the screen is a little complicated but nothing to worry about. Secondly, I added a traffic light to determine if the arduino received valid data.
+
+#### ILI9341-Touchscreen
+TODO: Foto
+TODO: Wiring
+
+#### Status Light
+TODO: Foto
+TODO: Wiring
+
