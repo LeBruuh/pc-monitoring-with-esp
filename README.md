@@ -219,20 +219,24 @@ The tray icon automatically searches for a connected microcontroller for up to 6
 If successful, the status LED on the ESP32 will turn green and the TFT will display the monitoring interface.
 If no device is found after 60 seconds, a notification will alert you and the program will stop.
 
-## 9. Usage
-- Normal workflow
-- Interpreting values
-- LED & color meanings
-
-## 10. Casing
+## 9. Casing
 coming soon ...
 
-## 11. Known Issues
+## 10. Known Issues
 Contact me if something is wrong
 
-## 12. Improvements & Roadmap
-- Planned features
-- Possible extensions
+## 11. Improvements
+- Messaging/notification system (e.g., Windows Toasts) for component overload.  
+- Support for multiple microcontrollers or displays.  
+- Configurable thresholds for CPU, RAM, GPU, and power.  
+- Logging of historical data for analysis.  
+- Cross-platform support beyond Windows.
+
+- Add support for AMD GPUs in addition to NVIDIA.  
+- Integrate with cloud dashboards for remote monitoring.  
+- Add more visualizations on the TFT display (graphs, trends).  
+- Optimize serial communication for faster updates.  
+- Provide a web-based interface for live monitoring and configuration.
 
 ## 13. Disclaimer
 This project is a beginner project and one of my first mini-projects.
