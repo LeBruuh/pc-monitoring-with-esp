@@ -11,7 +11,9 @@ I am a student in my final year of bachelor studies. I wanted to build a little 
 I used Windows to build and run my application. It is required to have a NVIDIA GPU, because of the program's structure. Other combinations weren't tested.
 
 ## 2. Showcase
-- Photos of the finished build
+<p align="center">
+  <img src="showcase/display-output.jpeg" width="90%">
+</p>
 
 ## 3. Features
 This project provides the following key features:
