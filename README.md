@@ -40,10 +40,9 @@ TODO: intro
 The first important step is to wire the arduino correctly. Especially the screen is a little complicated but nothing to worry about. Secondly, I added a traffic light to determine if the arduino received valid data.
 
 #### ILI9341-Touchscreen
-![Verkabelung des ILI am Arduino](showcase/arduino-verkabelung-ili-schraeg.jpeg)
 <p align="center">
-  <img src="showcase/arduino-verkabelung-ili-schraeg.jpeg" width="45%">
-  <img src="showcase/ili-verkabelung.jpeg" width="45%">
+  <img src="showcase/arduino-cables.jpeg" width="45%">
+  <img src="showcase/ili-cables.jpeg" width="45%">
 </p>
 
 We need to connect the ILI9341 to the Arduino. I have chosen the following wiring for this:
