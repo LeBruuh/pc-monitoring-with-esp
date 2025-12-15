@@ -1,26 +1,30 @@
-# pc-monitoring-with-esp
+# PC Monitoring with ESP32 and ILI9341
 
-I built a computer monitoring program which shows you cpu, ram and gpu usage, gpu temperature, vram usage and currently used power. Additionally, it calculates the overall used power and how much your session (from connecting the program to your esp) aprox. costed.
-The application shows different colors which indicate if one component is at a critical value. The program is written and functioning on Windows 11.
+## 1. Overview
+### What does this project do?
+This project implements a pc monitoring application. It shows component usages of CPU, GPU and your electricity usage.
 
-Following I describe which components I used (with links, as of 01. Dec 2025) and how I used them. You can download all code and recreate this project.
+### Why does it exist?
+I am a student in my final year of bachelor studies. I wanted to build a little project to level up my skills and wanted to share my work with you. Secondly, I would appreciate you to leave feedback and optimize my project.
 
-Have fun :)
+### Supported platforms
+I used Windows to build and run my application. It is required to have a NVIDIA GPU, because of the program's structure. Other combinations weren't tested.
 
+## 2. Showcase
+- Photos of the finished build
 
-## Disclaimer
-I am an absolute beginner and this is one of my first mini-projects. With that said, many things can be wrong or underperforming.
-Feel free to [contact me](https://discord.gg/phD7Wzf2) to tell me what to change or improve.
+## 3. Features
+This project provides the following key features:
 
-I did not search for vulnerabilities. Therefore, it is possible some side effects occure. I do not take responsibility for any damage or other negative side effects (i am using my app by myself, my Windows did not say something to me).
+Displayed metrics: Monitors your PC’s CPU, RAM, and GPU usage, GPU temperature, VRAM usage, and current power consumption in real time.
 
-## Showcase
-TODO: Showcase
+Color & LED status logic: The display and the traffic light LEDs indicate normal, warning, and critical states for each component.
 
-## Components
+Session cost calculation: Estimates the power consumption and approximate cost of your session from the moment you connect the program to the ESP32.
 
-### What to buy
-I used following components. The prices are from 1. December 2025.
+## 5. Components
+
+### 5 What to Buy
 
 - [micro controller](https://amzn.eu/d/e7BkkHr), 6,99 €
 - [traffic light leds](https://amzn.eu/d/hFKLvPI), 5,59 €
@@ -28,90 +32,122 @@ I used following components. The prices are from 1. December 2025.
 - [jumper cable](https://amzn.eu/d/e8eDK16), 5,94 €
 - [bread boards](https://amzn.eu/d/4nmU4Gx), (you need only one), 7,64 €
 
-- Overall price: 42,15 €
+- Overall price: 42,15 € (as of 1. December 2025)
 
-### Computer Hardware
-TODO: nur mit NVIDIA?
+## 6. Project Structure
+- Repository layout
 
-## Arduino
-TODO: intro
+## 7. Arduino / ESP32 Setup
 
-### Wiring
-The first important step is to wire the arduino correctly. Especially the screen is a little complicated but nothing to worry about. Secondly, I added a traffic light to determine if the arduino received valid data.
+### 7.1 Requirements
+Before you start programming the ESP32, make sure you have the following set up:
 
-#### ILI9341-Touchscreen
+Arduino IDE: Install the latest version from the official Arduino website.
+
+Board Selection: Make sure the NodeMCU-32S (or your ESP32 variant) is correctly installed in the Arduino IDE. You also need to select the correct board and port before uploading any sketches.
+
+### 7.2 Wiring
+
+#### 7.2.1 ILI9341 Touchscreen
+
 <p align="center">
   <img src="showcase/arduino-cables.jpeg" width="45%">
   <img src="showcase/ili-cables.jpeg" width="45%">
 </p>
 
-We need to connect the ILI9341 to the Arduino. I have chosen the following wiring for this:
-- SDO(MISO): D19
-- LED: 3V3
-- SCK: D18
-- SDI(MOSI): D23
-- DC: D2
-- RESET: D4
-- CS: D15
-- GND: GND
-- VCC: 3V3
+| ILI9341 Pin | ESP32 Pin | Description        |
+|------------|-----------|--------------------|
+| SDO (MISO) | D19       | SPI data from LCD  |
+| SDI (MOSI) | D23       | SPI data to LCD    |
+| SCK        | D18       | SPI clock          |
+| CS         | D15       | Chip select        |
+| DC         | D2        | Data / Command     |
+| RESET      | D4        | Display reset      |
+| LED        | 3V3       | Backlight power    |
+| VCC        | 3V3       | Power supply       |
+| GND        | GND       | Ground             |
 
-#### Status Light
-The status light has four connections, which I have wired as follows:
-- GND: GND
-- R: D13
-- Y: D12
-- G: D14
 
-### Programming
-#### IDE
-I used [the official Arduino IDE](https://www.arduino.cc/en/software/) to both program and upload the script to my esp32. I do not know of other programs to do so.
-Follow the instructions to install the Arduino IDE and continue with the next chapter.
 
-#### Libraries
-Once you've downloaded and configured your IDE (e.g. set up your working directory) you have to install the two libraries used in the script.
+#### 7.2.2 Status / Traffic Light LEDs
 
-1. Click on libraries (TODO: FOTO)
-2. Install the libraries (TODO: libraries listen)
-3. Go to your working directory into the ili9341-folder
-4. Edit the User_Setup.h File.
-5. TODO: was muss geändert werden?
+| Status Light Pin | ESP32 Pin | Meaning              |
+|-----------------|-----------|----------------------|
+| GND             | GND       | Ground               |
+| R (Red)         | D13       | Critical value       |
+| Y (Yellow)      | D12       | Warning / high load  |
+| G (Green)       | D14       | Normal operation     |
 
-#### Script
-Now, copy the script of my project to your working directory and open it using the Arduino IDE. 
+### 7.3 Libraries
+- Required libraries
+- Installation steps
+- User_Setup.h changes
 
-You can change certain things you want to alter e.g. the red zone, the kW price or the format of the clock.
+### 7.4 Arduino Script
+- Configuration options
+- Important constants
+- Customization tips
 
-#### Upload
-Once you're happy you can upload the script to your micro controller.
-Therefore, you have to pick the correct port (in which you plugged your micro controller in to) and the correct arduino (for my setup NodeMCU32S).
-Now, you can click on upload.
+### 7.5 Uploading the Sketch
+- Board & port selection
+- Common problems
 
-If you did everything correctly, there should be a little eevee on your ILI-Screen. If it is completely white, their could be something wrong with your wiring or your User_Setup.h of your ILI-lib.
+## 8. PC Application Setup
 
-## Computer
-Next we want to continue with setting up your computer and its script to send your data to the arduino.
+### 8.1 Requirements
+- Python version
+- Virtual environment (optional)
+- Required permissions
 
-### Programming
-TODO: VENV? IDE? WD?
+### 8.2 Installation
+- Create venv (optional)
+- Install dependencies
+- Configuration
 
-### Usage
-Follow these steps to correctly set up your terminal, install the requirements and start the program:
-1. 
-2.
+### 8.3 Running the Application
+- Start command
+- Expected output
+- First connection to ESP32
 
-## Casing
-After our Arduino is receiving correct data, we can add a casing to our project so it looks nice and can be placed anywhere easily.
+## 9. Usage
+- Normal workflow
+- Interpreting values
+- LED & color meanings
 
-I provided a file which you can use to 3D-print the casing. Additionally, I will add the measurements I did. Feel free to alter my file.
+## 10. Casing
+coming soon ...
 
-## Improvements
-- you can add a messaging logic (e.g. with Windows Toasts) to inform you if a component is overloaded.
+## 11. Known Issues
+- White screen issue
+- Serial reconnect problems
+- Workarounds
 
-## Criticism
-- sometimes the display gets fully white for no obvious reason.
+## 12. Improvements & Roadmap
+- Planned features
+- Possible extensions
 
-## Result
-Finally you have your very own monitoring tool with visual feedback about your components.
+## 13. Disclaimer
+This project is a beginner project and one of my first mini-projects.
+Therefore, parts of the code or hardware setup may be inefficient, incomplete, or incorrect.
 
-I hope you enjoyed my tutorial. If you want to feel free to send me a picture of your build on [Discord](https://discord.gg/phD7Wzf2) :) I would love to see it in action! 
+I did not actively search for vulnerabilities. As a result, unexpected behavior or side effects may occur.
+
+I do not take responsibility for any damage, data loss, hardware issues, or other negative effects caused by using this project.
+Use it at your own risk.
+
+If you have suggestions, improvements, or feedback, feel free to [contact me](https://discord.gg/phD7Wzf2).
+
+## 14. License
+This project is licensed under the **MIT License**.  
+You are free to use, modify, and distribute this project, provided that the original copyright
+notice and license text are included.
+
+See the [LICENSE](LICENSE) file for more information.
+
+## 15. Contact & Feedback
+If you have questions, suggestions, or feedback, feel free to reach out:
+
+Discord: [Join here](https://discord.gg/phD7Wzf2)
+Contributions: Pull requests are welcome!
+
+We appreciate any help to improve this project, fix bugs, or add new features.
