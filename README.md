@@ -238,6 +238,8 @@ Contact me if something is wrong
 - Optimize serial communication for faster updates.  
 - Provide a web-based interface for live monitoring and configuration.
 
+If you have suggestions, improvements, or feedback, feel free to [contact me](https://discord.gg/phD7Wzf2).
+
 ## 11. Disclaimer
 This project is a beginner project and one of my first mini-projects.
 Therefore, parts of the code or hardware setup may be inefficient, incomplete, or incorrect.
@@ -246,8 +248,6 @@ I did not actively search for vulnerabilities. As a result, unexpected behavior 
 
 I do not take responsibility for any damage, data loss, hardware issues, or other negative effects caused by using this project.
 Use it at your own risk.
-
-If you have suggestions, improvements, or feedback, feel free to [contact me](https://discord.gg/phD7Wzf2).
 
 ## 12. License
 This project is licensed under the **MIT License**.  
