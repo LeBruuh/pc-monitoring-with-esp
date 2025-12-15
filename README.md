@@ -42,23 +42,23 @@ The first important step is to wire the arduino correctly. Especially the screen
 #### ILI9341-Touchscreen
 ![Verkabelung des ILI am Arduino](showcase/arduino-verkabelung-ili-schraeg.jpeg)
 
-Wir müssen den ILI9341 an den Arduino anschließen. Dafür habe ich folgende Verkabelung gewählt:
-SDO(MISO): D19
-LED: 3V3
-SCK: D18
-SDI(MOSI): D23
-DC: D2
-RESET: D4
-CS: D15
-GND: GND
-VCC: 3V3
+We need to connect the ILI9341 to the Arduino. I have chosen the following wiring for this:
+- SDO(MISO): D19
+- LED: 3V3
+- SCK: D18
+- SDI(MOSI): D23
+- DC: D2
+- RESET: D4
+- CS: D15
+- GND: GND
+- VCC: 3V3
 
 #### Status Light
-Das Statuslicht hat vier Anschlüsse, welche ich wie folgt verkabelt habe:
-GND: GND
-R: D13
-Y: D12
-G: D14
+The status light has four connections, which I have wired as follows:
+- GND: GND
+- R: D13
+- Y: D12
+- G: D14
 
 ### Programming
 #### IDE
