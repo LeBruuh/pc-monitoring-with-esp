@@ -1,6 +1,6 @@
 # pc-monitoring-with-esp
 
-I build a computer monitoring program which shows you cpu, ram and gpu usage, gpu temperature, vram usage and currently used power. Additionally, it calculates the overall used power and how much your session (from connecting the program to your esp) aprox. costed.
+I built a computer monitoring program which shows you cpu, ram and gpu usage, gpu temperature, vram usage and currently used power. Additionally, it calculates the overall used power and how much your session (from connecting the program to your esp) aprox. costed.
 The application shows different colors which indicate if one component is at a critical value. The program is written and functioning on Windows 11.
 
 Following I describe which components I used (with links, as of 01. Dec 2025) and how I used them. You can download all code and recreate this project.
@@ -11,6 +11,11 @@ Have fun :)
 ## Disclaimer
 I am an absolute beginner and this is one of my first mini-projects. With that said, many things can be wrong or underperforming.
 Feel free to [contact me](https://discord.gg/phD7Wzf2) to tell me what to change or improve.
+
+I did not search for vulnerabilities. Therefore, it is possible some side effects occure. I do not take responsibility for any damage or other negative side effects (i am using my app by myself, my Windows did not say something to me).
+
+## Showcase
+TODO: Showcase
 
 ## Components
 
@@ -35,12 +40,25 @@ TODO: intro
 The first important step is to wire the arduino correctly. Especially the screen is a little complicated but nothing to worry about. Secondly, I added a traffic light to determine if the arduino received valid data.
 
 #### ILI9341-Touchscreen
-TODO: Foto
-TODO: Wiring
+![Verkabelung des ILI am Arduino](showcase/arduino-verkabelung-ili-schraeg)
+
+Wir müssen den ILI9341 an den Arduino anschließen. Dafür habe ich folgende Verkabelung gewählt:
+SDO(MISO): D19
+LED: 3V3
+SCK: D18
+SDI(MOSI): D23
+DC: D2
+RESET: D4
+CS: D15
+GND: GND
+VCC: 3V3
 
 #### Status Light
-TODO: Foto
-TODO: Wiring
+Das Statuslicht hat vier Anschlüsse, welche ich wie folgt verkabelt habe:
+GND: GND
+R: D13
+Y: D12
+G: D14
 
 ### Programming
 #### IDE
