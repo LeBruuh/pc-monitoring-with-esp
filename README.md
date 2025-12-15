@@ -41,6 +41,10 @@ The first important step is to wire the arduino correctly. Especially the screen
 
 #### ILI9341-Touchscreen
 ![Verkabelung des ILI am Arduino](showcase/arduino-verkabelung-ili-schraeg.jpeg)
+<p align="center">
+  <img src="showcase/arduino-verkabelung-ili-schraeg.jpeg" width="45%">
+  <img src="showcase/ili-verkabelung.jpeg" width="45%">
+</p>
 
 We need to connect the ILI9341 to the Arduino. I have chosen the following wiring for this:
 - SDO(MISO): D19
