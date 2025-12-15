@@ -24,7 +24,7 @@ Session cost calculation: Estimates the power consumption and approximate cost o
 
 ## 5. Components
 
-### 5 What to Buy
+### 5.1 What to Buy
 
 - [micro controller](https://amzn.eu/d/e7BkkHr), 6,99 €
 - [traffic light leds](https://amzn.eu/d/hFKLvPI), 5,59 €
@@ -79,30 +79,120 @@ Board Selection: Make sure the NodeMCU-32S (or your ESP32 variant) is correctly 
 | G (Green)       | D14       | Normal operation     |
 
 ### 7.3 Libraries
-- Required libraries
-- Installation steps
-- User_Setup.h changes
+- TFT_eSPI – controls the ILI9341 display
+- eevee72x72 – custom sprite/image used in the project
+- esp32-hal – hardware abstraction layer (usually included with the Arduino ESP32 core)
+
+2. Installation Steps
+
+- Open the Arduino IDE.
+- Navigate to Sketch → Include Library → Manage Libraries…
+- Search for TFT_eSPI and install it.
+- Place eevee72x72.h in your project folder (usually inside the src or main sketch directory).
+- Ensure the ESP32 board support is installed via Tools → Board → Board Manager → ESP32 by Espressif Systems.
+
+3. User_Setup.h Changes
+
+Open User_Setup.h in the TFT_eSPI library folder.
+Adjust the pin definitions to match your wiring table:
+
+```cpp
+#define TFT_MOSI  23
+#define TFT_MISO  19  // optional, used only if SPI read is required
+#define TFT_SCLK  18
+#define TFT_CS    15
+#define TFT_DC     2
+#define TFT_RST    4
+#define SPI_FREQUENCY 27000000
+```
+
+Optional settings (fonts, backlight, display type) can be left as default for your ILI9341.
+Save the file before uploading the sketch.
+
+⚠️ Important: Incorrect User_Setup.h configuration can result in a blank or non-responsive display. Always double-check the pins match your wiring table.
 
 ### 7.4 Arduino Script
-- Configuration options
-- Important constants
-- Customization tips
+The Arduino sketch controls the ESP32, reads serial data from your PC, and updates both the ILI9341 display and the traffic light LEDs.
+
+#### 7.4.1 Configuration Options
+You can customize the following constants in the sketch to match your setup:
+
+```cpp
+#define RED_LED    13
+#define YELLOW_LED 12
+#define GREEN_LED  14
+
+const unsigned long updateInterval = 5000;  // Display update interval in milliseconds
+const float pricePerKWh = 0.2985;          // Electricity price per kWh
+```
+Additionally, the TFT pins are set in User_Setup.h as described in section 7.3.
+
+#### 7.4.2 Important constants
+`cpu`, `ram`, `gpul`, `gput`, `vram`, `vramt` → store the PC metrics received via Serial
+`totalEnergy_Wh` → keeps track of energy usage
+`currentTime` → stores the local time for display
+`lastUpdate` → controls the display refresh interval
+
+#### 7.4.3 Customization Tips
+- Display Positioning: Change the coordinates in drawStats() to rearrange displayed values.
+- Thresholds for LEDs/Bars: Adjust values in drawStats() to modify warning and critical thresholds for CPU, RAM, and GPU.
+- Eevee Image: Replace eevee72x72 with your own sprite if desired.
+- Update Interval: Modify updateInterval to refresh the display more or less frequently.
+
+⚠️ Ensure all constants and pin definitions match your wiring and User_Setup.h settings. Otherwise, the display or LEDs may not work correctly.
 
 ### 7.5 Uploading the Sketch
-- Board & port selection
-- Common problems
+After configuring the Arduino IDE and your libraries, you can upload the sketch to your ESP32.
+
+#### Board & Port Selection
+1. Connect your ESP32 to your PC via USB.
+2. In the Arduino IDE, go to Tools → Board → ESP32 Arduino → NodeMCU-32S (or your ESP32 variant).
+3. Select the correct Port under Tools → Port.
+      - On Windows, it usually appears as COMx.
+
+#### Uploading
+Click the Upload button in the Arduino IDE (arrow pointing right).
+Wait for the compilation and upload to complete.
+
+💡 Tip: After a successful upload, your ESP32 should display the Eevee image.
+
+#### Common Problems & Tips
+
+| Problem | Solution |
+|---------|---------|
+| **Blank display after upload** | Double-check `User_Setup.h` pins and wiring. Ensure `TFT_CS`, `TFT_DC`, `TFT_RST` match your connections. |
+| **Sketch fails to compile** | Make sure all required libraries (`TFT_eSPI`, `eevee72x72`) are installed and the ESP32 board support is up-to-date. |
+| **Upload fails** | Try pressing the ESP32 **BOOT** button while uploading. Check that no other program (like Serial Monitor) is using the same COM port. |
+| **LEDs not responding** | Verify wiring and pin definitions (`RED_LED`, `YELLOW_LED`, `GREEN_LED`) match the sketch. |
 
 ## 8. PC Application Setup
 
 ### 8.1 Requirements
-- Python version
-- Virtual environment (optional)
-- Required permissions
+- Python 3.x (tested with 3.11)
+- Optional: Virtual environment (`venv`)
+- Required permissions: access to serial ports, registry modification (Windows autostart)
 
 ### 8.2 Installation
-- Create venv (optional)
-- Install dependencies
-- Configuration
+#### 8.2.1 Optional: Create a Virtual Environment
+It is recommended to use a virtual environment to avoid conflicts with other Python packages.
+
+- create a venv: ```python -m venv venv```
+- activate it:
+    - Windows (cmd): ```venv\Scripts\activate```
+    - Windows (PowerShell): ```venv\Scripts\Activate.ps1```
+    - Linux/macOS: ```source venv/bin/activate```
+
+### 8.2.2 Install Dependencies
+install the required Python packages:
+```pip install -r requirements.txt```
+or install manually:
+```pip install psutil pystray Pillow pywin32 win10toast```
+
+### 8.2.3 Configuration
+Ensure the ESP32/Arduino is wired correctly and the Arduino sketch is uploaded.
+Place the assets folder (```eevee-icon.png``` and ```eevee-icon.ico```) in the same directory as the script.
+Optional: Configure autostart via the tray icon after running the program once.
+
 
 ### 8.3 Running the Application
 - Start command
