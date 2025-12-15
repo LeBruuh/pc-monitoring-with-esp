@@ -5,7 +5,7 @@
 This project implements a pc monitoring application. It shows component usages of CPU, GPU and your electricity usage.
 
 ### Why does it exist?
-I am a student in my final year of bachelor studies. I wanted to build a little project to level up my skills and wanted to share my work with you. Secondly, I would appreciate you to leave feedback and optimize my project.
+I am a student in my final year of bachelor studies. I wanted to build a little project to level up my skills and share my work with you. Secondly, I would appreciate you to leave feedback and optimize my project.
 
 ### Supported platforms
 I used Windows to build and run my application. It is required to have a NVIDIA GPU, because of the program's structure. Other combinations weren't tested.
