@@ -193,11 +193,31 @@ Ensure the ESP32/Arduino is wired correctly and the Arduino sketch is uploaded.
 Place the assets folder (```eevee-icon.png``` and ```eevee-icon.ico```) in the same directory as the script.
 Optional: Configure autostart via the tray icon after running the program once.
 
+### 8.2.4 Building the Executable
+To create a standalone Windows executable using PyInstaller:
+```pyinstaller --noconsole --onefile --icon=assets/eevee-icon.ico --add-data "assets/eevee-icon.png;assets" eeveemonitoring.py```
+
 
 ### 8.3 Running the Application
-- Start command
-- Expected output
-- First connection to ESP32
+#### 8.3.1 Start the Program
+Run the Python script 
+    ```bash
+    python eeveemonitoring.py
+    ```
+or the Executable (Windows)
+    ```eeveemonitoring.exe```
+
+#### 8.3.2 Expected Output
+- A tray icon appears in the system tray (Eevee icon).
+- If the ESP32/Microcontroller is connected, a notification will show:
+    ```Die Verbindung zum Microcontroller wurde an Port COMx hergestellt.```
+- CPU, RAM, GPU stats, VRAM usage, and power will start being sent to the ESP32.
+
+#### 8.3.3 First Connection
+Make sure the Arduino sketch is uploaded and the ESP32 is powered on.
+The tray icon automatically searches for a connected microcontroller for up to 60 seconds.
+If successful, the status LED on the ESP32 will turn green and the TFT will display the monitoring interface.
+If no device is found after 60 seconds, a notification will alert you and the program will stop.
 
 ## 9. Usage
 - Normal workflow
@@ -208,9 +228,7 @@ Optional: Configure autostart via the tray icon after running the program once.
 coming soon ...
 
 ## 11. Known Issues
-- White screen issue
-- Serial reconnect problems
-- Workarounds
+Contact me if something is wrong
 
 ## 12. Improvements & Roadmap
 - Planned features
