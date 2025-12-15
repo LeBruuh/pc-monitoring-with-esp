@@ -35,7 +35,34 @@ Session cost calculation: Estimates the power consumption and approximate cost o
 - Overall price: 42,15 € (as of 1. December 2025)
 
 ## 5. Project Structure
-- Repository layout
+```
+pc-monitoring-esp32/
+│
+├─ README.md
+├─ LICENSE
+├─ .gitignore
+│
+├─ arduino/                 # ESP32 / Arduino Code
+│   ├─ libraries/
+│   │   └─ TFT_eSPI/
+│   │       └─ User_Setup.h # TFT_eSPI customization
+│   │
+│   └─ script/
+│       ├─ script.ino       # Arduino Sketch
+│       ├─ eevee72x72.h     # Custom Eevee Image
+│       └─ eevee200x200.h   # Custom Eevee Image
+│
+├─ computer/                # Python PC Monitoring App
+│   ├─ eeveemonitoring.py   # Main script
+│   ├─ requirements.txt     # Python Dependencies
+│   └─ assets/
+│       ├─ eevee-icon.png
+│       └─ eevee-icon.ico
+│
+└─ showcase/                # Images and showcase
+    ├─ arduino-cables.jpeg
+    └─ ili-cables.jpeg
+```
 
 ## 6. Arduino / ESP32 Setup
 
