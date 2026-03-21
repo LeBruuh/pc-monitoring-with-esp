@@ -288,7 +288,8 @@ See the [LICENSE](LICENSE) file for more information.
 ## 13. Contact & Feedback
 If you have questions, suggestions, or feedback, feel free to reach out:
 
-Discord: [Join here](https://discord.gg/phD7Wzf2)
+Discord: [Join here](https://discord.gg/3VbR99Hg)
+
 Contributions: Pull requests are welcome!
 
 We appreciate any help to improve this project, fix bugs, or add new features.
