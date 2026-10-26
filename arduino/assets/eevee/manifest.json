@@ -1,0 +1,63 @@
+{
+  "repository": "https://github.com/PMDCollab/SpriteCollab",
+  "revision": "a8275d343759dd01acd32fcb05134669c9df0b6a",
+  "artist_credit": "2020-10-07 17:58:43.712400\tCHUNSOFT\tCUR\tUnspecified\tWalk,Attack,Strike,Shoot,Appeal,TailWhip,Sleep,Hurt,Idle,Swing,Double,Hop,Charge,Rotate,EventSleep,Wake,Eat,Tumble,Pose,Pull,Pain,Float,DeepBreath,Nod,Sit,LookUp,Sink,Trip,Laying,LeapForth,Head,Cringe,LostBalance,TumbleBack,Faint,HitGround",
+  "palette_colors": 9,
+  "scale": 3,
+  "clips": [
+    {
+      "id": "Sleep",
+      "source_animation": "EventSleep",
+      "direction_row": 7,
+      "width": 20,
+      "height": 14,
+      "frames": 2,
+      "durations_ms": [
+        700,
+        817
+      ],
+      "preview": "vert-dort.gif"
+    },
+    {
+      "id": "Awake",
+      "source_animation": "Idle",
+      "direction_row": 7,
+      "width": 19,
+      "height": 20,
+      "frames": 2,
+      "durations_ms": [
+        267,
+        267
+      ],
+      "preview": "jaune-reveille.gif"
+    },
+    {
+      "id": "Run",
+      "source_animation": "Walk",
+      "direction_row": 7,
+      "width": 27,
+      "height": 25,
+      "frames": 7,
+      "durations_ms": [
+        53,
+        53,
+        53,
+        53,
+        80,
+        27,
+        27
+      ],
+      "preview": "rouge-court.gif"
+    }
+  ],
+  "sources": {
+    "AnimData.xml": "f33b22fb64b51cd4f5868df7433ceb4fbb0c58606364ba3faa7f326960452b28",
+    "credits.txt": "b60cb07a46c6f701f6098300f2860e09e5619dd71eef529fd4643f22536942ca",
+    "EventSleep-Anim.png": "f71b64c23f8ca99e01bfe6fb0db07d560effc4b5e4636bde54b143a4d6fd08ed",
+    "Idle-Anim.png": "1dec7d7524844f35a8f7c8c0574d9741edad6cb319a980a5097a825a58bbe4de",
+    "LICENSE.md": "284233a8bc62ac54d878552845ef66ab94b25112e6fc8f902fcdfa6149748c31",
+    "Sleep-Anim.png": "812c0b91103e414625e210dac8a6b272f74438c775899290633e46c74f4e72d2",
+    "source-revision.json": "d99a847a9b9d1b3865444e34f47fb26d5db20971644fb8d13be5e2a1ace402ff",
+    "Walk-Anim.png": "037329dca93572a20115e679f10a85d4981b7cb961b6c8f0fd9c78745ba98cc0"
+  }
+}
