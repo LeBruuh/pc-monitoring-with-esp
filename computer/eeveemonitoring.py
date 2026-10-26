@@ -9,28 +9,35 @@ from pathlib import Path
 from PIL import Image
 import pystray
 from win10toast import ToastNotifier
-import winreg
+import os
+import json
+import argparse
+import logging
+from logging.handlers import RotatingFileHandler
 import sys
+from cpu_sensors import read_cpu_metrics, combined_power, build_frame
 
 # ------------------------------------------------------------
 # Hilfsfunktion für PyInstaller
 # ------------------------------------------------------------
 def resource_path(relative_path):
-    """Gibt den Pfad zu einer Ressource zurück, auch nach OneFile-Build."""
-    if hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS) / relative_path
-    return Path(relative_path)
+    """Resolve assets independently of the launch working directory."""
+    base = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else Path(__file__).resolve().parent
+    return base / relative_path
 
 # ------------------------------------------------------------
 # Einstellungen
 # ------------------------------------------------------------
 BAUD = 115200
 CHECK_INTERVAL = 3
-SEARCH_TIMEOUT = 60
+PORT_HINT = os.environ.get("ESP32_MONITOR_PORT")
 ICON_PATH = resource_path("assets/eevee-icon.png") # Tray-Icon
 TOAST_ICON = resource_path("assets/eevee-icon.ico")
 APP_NAME = "Eevee-Hardware-Monitor"
+APP_DIR = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+STARTUP_LINK = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs/Startup/Eevee-Hardware-Monitor.lnk"
 
+CPU_SENSOR_FILE = Path(os.environ.get("ESP32_SENSOR_FILE", str(APP_DIR / "cpu-sensors.json")))
 RUNNING = True
 ser = None
 controller_connected = False
@@ -42,72 +49,61 @@ toaster = ToastNotifier()
 # Autostart prüfen
 # ------------------------------------------------------------
 def is_autostart_enabled():
-    try:
-        key = winreg.OpenKey(
-            winreg.HKEY_CURRENT_USER,
-            r"Software\Microsoft\Windows\CurrentVersion\Run",
-            0, winreg.KEY_READ
-        )
-        value, _ = winreg.QueryValueEx(key, APP_NAME)
-        winreg.CloseKey(key)
-        return True
-    except FileNotFoundError:
-        return False
-    except Exception:
-        return False
+    return STARTUP_LINK.is_file()
 
 
 # ------------------------------------------------------------
 # Autostart aktivieren
 # ------------------------------------------------------------
 def enable_autostart():
-    script_path = Path(sys.executable).resolve()
     try:
-        key = winreg.OpenKey(
-            winreg.HKEY_CURRENT_USER,
-            r"Software\Microsoft\Windows\CurrentVersion\Run",
-            0, winreg.KEY_SET_VALUE
-        )
-        winreg.SetValueEx(key, APP_NAME, 0, winreg.REG_SZ, f'"{script_path}"')
-        winreg.CloseKey(key)
-        print("[Autostart] aktiviert.")
-    except Exception as e:
-        print(f"[Autostart Fehler] {e}")
+        import win32com.client
+        shortcut = win32com.client.Dispatch("WScript.Shell").CreateShortCut(str(STARTUP_LINK))
+        if getattr(sys, "frozen", False):
+            shortcut.TargetPath = sys.executable
+        else:
+            pythonw = Path(sys.executable).with_name("pythonw.exe")
+            shortcut.TargetPath = str(pythonw if pythonw.exists() else Path(sys.executable))
+            shortcut.Arguments = subprocess.list2cmdline([str(Path(__file__).resolve())])
+        shortcut.WorkingDirectory = str(APP_DIR)
+        shortcut.IconLocation = str(TOAST_ICON)
+        shortcut.Save()
+        logging.info("Demarrage automatique active")
+    except Exception:
+        logging.exception("Impossible d'activer le demarrage automatique")
+        raise
 
 
 # ------------------------------------------------------------
 # Autostart deaktivieren
 # ------------------------------------------------------------
 def disable_autostart():
-    try:
-        key = winreg.OpenKey(
-            winreg.HKEY_CURRENT_USER,
-            r"Software\Microsoft\Windows\CurrentVersion\Run",
-            0, winreg.KEY_SET_VALUE
-        )
-        winreg.DeleteValue(key, APP_NAME)
-        winreg.CloseKey(key)
-        print("[Autostart] deaktiviert.")
-    except FileNotFoundError:
-        pass
-    except Exception as e:
-        print(f"[Autostart Fehler] {e}")
+    STARTUP_LINK.unlink(missing_ok=True)
+    logging.info("Demarrage automatique desactive")
 
 
 # ------------------------------------------------------------
 # Mikrocontroller suchen
 # ------------------------------------------------------------
 def find_microcontroller():
-    ports = serial.tools.list_ports.comports()
-    for p in ports:
-        keywords = ["CH340", "CP210", "USB", "ESP", "ARDUINO"]
-        if any(k in p.description.upper() for k in keywords):
-            try:
-                connection = serial.Serial(p.device, BAUD, timeout=1)
-                time.sleep(2)
-                return connection
-            except:
-                continue
+    for port in serial.tools.list_ports.comports():
+        if PORT_HINT:
+            matches = port.device.upper() == PORT_HINT.upper()
+        else:
+            matches = port.vid in (0x10C4, 0x1A86, 0x303A) or any(
+                token in port.description.upper() for token in ("CH340", "CH343", "CP210", "ESP32")
+            )
+        if not matches:
+            continue
+        connection = None
+        try:
+            connection = serial.Serial(port.device, BAUD, timeout=1, write_timeout=2)
+            time.sleep(2)
+            return connection
+        except (serial.SerialException, OSError):
+            if connection is not None:
+                connection.close()
+            logging.debug("Port indisponible : %s", port.device, exc_info=True)
     return None
 
 
@@ -115,125 +111,77 @@ def find_microcontroller():
 # GPU
 # ------------------------------------------------------------
 def get_gpu_stats():
+    empty = {"GPU Temp": -1, "GPU Load": -1, "VRAM Used": -1, "VRAM Total": -1, "Power": -1}
     try:
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         output = subprocess.check_output([
             "nvidia-smi",
             "--query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw",
             "--format=csv,noheader,nounits"
-        ], 
-        encoding="utf-8",
-        startupinfo=startupinfo
-        )
-
-        temp, util, mem_used, mem_total, power = output.strip().split(", ")
-
-        return {
-            "GPU Temp": int(temp),
-            "GPU Load": int(util),
-            "VRAM Used": int(mem_used),
-            "VRAM Total": int(mem_total),
-            "Power": float(power)
-        }
-
-    except:
-        return {
-            "GPU Temp": -1,
-            "GPU Load": -1,
-            "VRAM Used": -1,
-            "VRAM Total": -1,
-            "Power": -1
-        }
+        ], encoding="utf-8", creationflags=subprocess.CREATE_NO_WINDOW, timeout=5)
+        fields = [value.strip() for value in output.strip().splitlines()[0].split(",")]
+        if len(fields) != 5:
+            return empty
+        result = {}
+        for (key, fallback), value in zip(empty.items(), fields):
+            try:
+                result[key] = float(value) if key == "Power" else int(float(value))
+            except ValueError:
+                result[key] = fallback
+        return result
+    except (OSError, subprocess.SubprocessError, IndexError):
+        logging.debug("Lecture NVIDIA indisponible", exc_info=True)
+        return empty
 
 
 # ------------------------------------------------------------
 # Daten senden
 # ------------------------------------------------------------
 def send_stats():
-    global ser
     if ser is None:
         return
-
     cpu_load = int(psutil.cpu_percent())
     ram_usage = int(psutil.virtual_memory().percent)
     gpu = get_gpu_stats()
-
-    msg = (
-        f"CPU:{cpu_load};RAM:{ram_usage};"
-        f"GPUTemp:{gpu['GPU Temp']};GPULoad:{gpu['GPU Load']};"
-        f"VRAMUsed:{gpu['VRAM Used']};VRAMTotal:{gpu['VRAM Total']};"
-        f"Power:{gpu['Power']};\n"
-    )
-
+    cpu = read_cpu_metrics(CPU_SENSOR_FILE)
+    message = build_frame(cpu_load, ram_usage, cpu, gpu)
     try:
-        ser.write(msg.encode("utf-8"))
-        print(msg.encode("utf-8"))
-    except:
-        try: ser.close()
-        except: pass
-        ser = None
+        ser.write(message.encode("utf-8"))
+    except (serial.SerialException, OSError):
+        disconnect_controller()
 
 
 # ------------------------------------------------------------
 # Serial Monitor Thread
 # ------------------------------------------------------------
 def serial_worker():
-    global ser, controller_connected, RUNNING
-    start_time = time.time()
-
+    global ser, controller_connected
+    # Wait indefinitely, including when the ESP32 is plugged in after login.
     while RUNNING:
-        ports = [p.device for p in serial.tools.list_ports.comports()]
-
-        # Prüfen, ob der aktuelle Port noch vorhanden ist
-        if ser:
-            if ser.port not in ports:
-                try: ser.close()
-                except: pass
-                ser = None
-                controller_connected = False
-                toaster.show_toast(APP_NAME, f'Der Mikrocontroller an Port {ser.port} wurde getrennt.', icon_path=TOAST_ICON, duration=4)
-
-        # Wenn kein Serielport offen, nach Mikrocontroller suchen
-        if ser is None:
-            ser = find_microcontroller()
-            if ser and not controller_connected:
-                controller_connected = True
-                toaster.show_toast(
-                    APP_NAME,
-                    f'Die Verbindung zum Microcontroller wurde an Port {ser.port} hergestellt.',
-                    icon_path=TOAST_ICON,
-                    duration=3
-                )
-
-            # Beim Start: abbrechen nach Timeout
-            if (time.time() - start_time) > SEARCH_TIMEOUT and not controller_connected:
-                toaster.show_toast(
-                    APP_NAME,
-                    "Es wurde schon eine Weile kein Microcontroller gefunden. Programm wird beendet.",
-                    icon_path=TOAST_ICON,
-                    duration=5
-                )
-                stop_program()
-                return
-
-        # Wenn verbunden → Werte senden
-        if ser:
-            send_stats()
-
-        time.sleep(5)
+        try:
+            ports = {port.device for port in serial.tools.list_ports.comports()}
+            if ser is not None and ser.port not in ports:
+                disconnect_controller()
+            if ser is None:
+                ser = find_microcontroller()
+                if ser is not None:
+                    controller_connected = True
+                    notify(f"ESP32 connecte sur {ser.port}")
+            if ser is not None:
+                send_stats()
+        except Exception:
+            logging.exception("Erreur dans le suivi USB ; nouvelle tentative")
+            disconnect_controller()
+        time.sleep(CHECK_INTERVAL)
 
 
 # ------------------------------------------------------------
 # Tray-Funktionen
 # ------------------------------------------------------------
 def stop_program(icon=None, item=None):
-    global RUNNING, ser
+    global RUNNING
     RUNNING = False
-    if ser:
-        try: ser.close()
-        except: pass
-    if icon:
+    disconnect_controller(announce=False)
+    if icon is not None:
         icon.stop()
 
 
@@ -257,10 +205,10 @@ def toggle_autostart(icon, item):
 def create_menu():
     return pystray.Menu(
         pystray.MenuItem(
-            "Autostart deaktivieren" if is_autostart_enabled() else "Autostart aktivieren",
+            "Desactiver le demarrage automatique" if is_autostart_enabled() else "Activer le demarrage automatique",
             toggle_autostart
         ),
-        pystray.MenuItem("Eevee beenden", stop_program)
+        pystray.MenuItem("Quitter le moniteur ESP32", stop_program)
     )
 
 
@@ -276,7 +224,84 @@ def start_tray():
 # ------------------------------------------------------------
 # Start
 # ------------------------------------------------------------
+def notify(message):
+    logging.info(message)
+    try:
+        if not toaster.notification_active():
+            toaster.show_toast(APP_NAME, message, icon_path=str(TOAST_ICON), duration=3, threaded=True)
+    except Exception:
+        logging.debug("Notification Windows indisponible", exc_info=True)
+
+
+def disconnect_controller(announce=True):
+    global ser, controller_connected
+    previous = ser
+    ser = None
+    was_connected = controller_connected
+    controller_connected = False
+    if previous is not None:
+        port = previous.port
+        try:
+            previous.close()
+        except (OSError, serial.SerialException):
+            pass
+        if announce and was_connected:
+            notify(f"ESP32 deconnecte de {port}. En attente du prochain branchement.")
+
+
+def main():
+    global PORT_HINT
+    parser = argparse.ArgumentParser(description="Moniteur PC vers ESP32 par USB")
+    parser.add_argument("--port", help="Port COM explicite, sinon detection automatique")
+    parser.add_argument("--diagnose", action="store_true", help="Verifier les mesures sans ouvrir de port USB")
+    parser.add_argument("--diagnose-file", type=Path, help="Ecrire le diagnostic JSON dans un fichier")
+    args = parser.parse_args()
+    PORT_HINT = args.port or PORT_HINT
+    if args.diagnose or args.diagnose_file:
+        cpu = read_cpu_metrics(CPU_SENSOR_FILE)
+        gpu = get_gpu_stats()
+        report = {
+            "agent_version": 4,
+            "python": sys.version.split()[0],
+            "cpu_percent": psutil.cpu_percent(interval=.2),
+            "ram_percent": psutil.virtual_memory().percent,
+            "cpu_temperature_c": cpu["temperature_c"],
+            "cpu_power_w": cpu["power_w"],
+            "gpu": gpu,
+            "combined_power_w": combined_power(cpu["power_w"], gpu["Power"]),
+            "energy_scope": "CPU Package + GPU board",
+            "serial_ports": [{"device": p.device, "description": p.description, "vid": p.vid, "pid": p.pid}
+                             for p in serial.tools.list_ports.comports()],
+            "assets_ok": ICON_PATH.is_file() and TOAST_ICON.is_file(),
+            "autostart_enabled": is_autostart_enabled(),
+        }
+        text = json.dumps(report, indent=2, ensure_ascii=False)
+        if args.diagnose_file:
+            args.diagnose_file.write_text(text, encoding="utf-8")
+        if sys.stdout is not None:
+            print(text)
+        return
+    import win32event
+    import win32api
+    import winerror
+    mutex = win32event.CreateMutex(None, False, "Local\\EeveeHardwareMonitor")
+    if win32api.GetLastError() == winerror.ERROR_ALREADY_EXISTS:
+        win32api.CloseHandle(mutex)
+        return
+    try:
+        logs = APP_DIR / "logs"
+        logs.mkdir(exist_ok=True)
+        handler = RotatingFileHandler(logs / "monitor.log", maxBytes=500000, backupCount=2, encoding="utf-8")
+        logging.basicConfig(level=logging.INFO, handlers=[handler],
+                            format="%(asctime)s %(levelname)s %(message)s")
+        logging.info("Agent demarre ; en attente de l'ESP32")
+        worker = threading.Thread(target=serial_worker, daemon=True)
+        worker.start()
+        start_tray()
+    finally:
+        stop_program()
+        win32api.CloseHandle(mutex)
+
+
 if __name__ == "__main__":
-    t = threading.Thread(target=serial_worker, daemon=True)
-    t.start()
-    start_tray()
+    main()
