@@ -90,5 +90,11 @@ CPU snapshots older than 10 seconds or more than two seconds in the future are
 rejected. Read locks receive at most three 50 ms delays before returning unavailable.
 Do not use old sensor JSON files as a live source.
 
+The scheduled CPU reader runs without a console window. If CPU power and
+temperature both become unavailable, check that `ESP32Monitor-CPU-Temperature`
+is running in Task Scheduler. After updating an older console-style reader,
+run `Installer_capteur_CPU.cmd` again to install the background build in the
+protected directory; changing only the portable files does not replace it.
+
 The agent writes a rotating `logs/monitor.log` beside itself. These files and
 sensor snapshots are local runtime state and are excluded from Git.

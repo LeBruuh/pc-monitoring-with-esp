@@ -43,3 +43,9 @@ were denied, while six consecutive fresh CPU samples remained readable. The
 compiled ordinary agent resumed USB monitoring. A fresh build environment with
 pip 26.2.2 and setuptools 84.2.1 reported no known dependency vulnerabilities.
 See SECURITY_CHANGES.md for migration and scope.
+
+The CPU reader is built as a Windows application (`/target:winexe`) so the
+scheduled background process has no console window to close accidentally.
+A console-style build was observed stopped with status 0xC000013A; its stale
+CPU snapshot correctly caused the agent to report combined power as N/A.
+Restarting the protected task restored fresh CPU readings and combined power.
