@@ -2,12 +2,12 @@
 
 Source-branch checks completed on Windows:
 
-- 18 Python unit tests and the C# package-power selection tests passed.
+- 26 Python unit tests and the C# package-power selection tests passed.
 - Sprite header and GIF previews regenerated from the committed source sheets;
   all source hashes in the asset manifest matched.
 - `Build-CpuSensors.ps1` and `Build-Agent.ps1` rebuilt the CPU reader and agent
   using Python 3.12.14 and PyInstaller 6.22.3. The packaged agent reported
-  version 4, valid assets, and real Intel CPU + NVIDIA GPU power.
+  version 5, valid assets, and real Intel CPU + NVIDIA GPU power.
 - `Build-Firmware.ps1` compiled using the repository's explicit TFT setup:
   349764 bytes of program storage and 23908 bytes of global RAM.
 
@@ -35,3 +35,11 @@ branch therefore includes the independently tested portable AMD-name fix.
 No machine-specific logs, full chat transcripts, live sensor JSON, serial
 port assignments, Windows account paths, credentials, or executable bundles
 are needed to reproduce the source build and none are included here.
+
+
+The version 5 protected installation was applied to the Intel server and checked
+from a non-elevated process: reader-directory creation and snapshot write access
+were denied, while six consecutive fresh CPU samples remained readable. The
+compiled ordinary agent resumed USB monitoring. A fresh build environment with
+pip 26.2.2 and setuptools 84.2.1 reported no known dependency vulnerabilities.
+See SECURITY_CHANGES.md for migration and scope.

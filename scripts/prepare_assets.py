@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 import hashlib
 import json
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 root=Path(__file__).resolve().parents[1]
 release=root/'arduino/assets/eevee'
@@ -39,7 +39,8 @@ for identifier,name,filename,speed in [('Sleep','EventSleep','vert-dort.gif',1.4
         previews.append(canvas)
     previews[0].save(release/'previews'/filename,save_all=True,append_images=previews[1:],duration=durations,loop=0,disposal=2)
     clips.append({'id':identifier,'source_animation':name,'direction_row':direction,'width':w,'height':h,'frames':len(frames),'durations_ms':durations,'pixels':encoded,'preview':filename})
-assert len(palette)<=256
+if len(palette)>256:
+    raise ValueError('The indexed sprite palette exceeds 256 colors')
 lines=['// SPDX-License-Identifier: CC-BY-NC-4.0','#pragma once','#include <stdint.h>','// Existing CHUNSOFT artwork from PMDCollab/SpriteCollab; see ../assets/eevee/sources/credits.txt.','namespace PetAssets {']
 lines+=['constexpr uint16_t PALETTE_COUNT='+str(len(palette))+';', 'const uint16_t palette[] PROGMEM={'+','.join('0x%04X'%v for v in palette)+'};']
 for clip in clips:

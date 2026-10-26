@@ -9,10 +9,15 @@ hardware access; the tray application runs as the normal interactive user.
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r computer/requirements-build.txt
+.\.venv\Scripts\python.exe -m pip install --upgrade "pip>=26.2"
+.\.venv\Scripts\python.exe -m pip install --upgrade --only-binary=:all: -r computer/requirements-build.txt
 ```
 
-`setuptools<81` is retained because win10toast imports `pkg_resources`.
+Notifications use pystray’s native Windows implementation. Neither win10toast nor
+a legacy setuptools/pkg_resources runtime dependency is required. The corrected
+pystray minimum is 0.19.5. `computer/requirements-windows.lock.txt` records the
+versions used for the security-checked Windows build; update and audit that
+snapshot when rebuilding in the future.
 
 Download and extract the official [LibreHardwareMonitor 0.9.6 Windows release](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases/tag/v0.9.6).
 Then build the CPU reader with the directory containing its DLLs:
@@ -24,11 +29,21 @@ Then build the CPU reader with the directory containing its DLLs:
 ```
 
 The installer requests Windows elevation and creates the interactive logon task
-`ESP32Monitor-CPU-Temperature`. Its process uses normal priority (task priority 4),
-updates `computer/cpu-sensors.json` about every two seconds, and restarts on failure.
-If it finds a task pointing to a different installation, it stops with an explanation.
-Install from the intended permanent directory. Running the installer again restarts
-the old reader before applying its new task settings.
+`ESP32Monitor-CPU-Temperature`. The elevated reader and its DLLs are copied into
+`Program Files/EeveeMonitor/CpuSensors`, owned by Administrators, with write access
+only for Administrators and SYSTEM. Measurements are stored in its protected
+`Data/cpu-sensors.json` file. The ordinary tray application has read access only.
+The executable path and working directory of the task are absolute, protected
+paths; moving the portable app does not move the privileged task.
+
+The installer rejects redirected installation paths and unsafe ownership/write
+permissions. It migrates a recognized older CPU task, stopping its previous reader
+before registering the protected action. Do not manually point the task back to
+a user-writable folder. Updating the CPU reader requires running the installer
+again and accepting Windows elevation. The task keeps normal CPU priority (4),
+samples about every two seconds, and restarts on failure. Snapshot ownership and
+ACLs are applied at file creation before atomic publication.
+
 
 Use the tray menu to enable startup at login. The shortcut targets the current
 source interpreter or packaged executable. USB reconnection is automatic.
@@ -66,6 +81,11 @@ Only a single valid package sensor is accepted. Core readings are not added agai
 
 `ESP32_MONITOR_PORT` or `--port` selects an explicit port when auto-detection is
 unsuitable. `ESP32_SENSOR_FILE` selects a different CPU snapshot file.
+The default snapshot path is obtained from the Windows Program Files API; the
+old JSON next to the portable executable is no longer used automatically.
+NVIDIA tools are resolved only from the Windows system directory or the standard
+NVIDIA NVSMI directory under Program Files, never the working directory or PATH.
+
 CPU snapshots older than 10 seconds or more than two seconds in the future are
 rejected. Read locks receive at most three 50 ms delays before returning unavailable.
 Do not use old sensor JSON files as a live source.

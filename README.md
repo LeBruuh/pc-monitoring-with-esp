@@ -1,9 +1,9 @@
-# PC Monitoring with ESP32 and ILI9341 — revised edition
+# PC Monitoring with ESP32 and ILI9341 â€” revised edition
 
 A Windows agent sends live CPU, RAM, NVIDIA GPU, temperature, VRAM, and measured
-CPU + GPU power to an ESP32 with an ILI9341 320×240 display.
+CPU + GPU power to an ESP32 with an ILI9341 320Ã—240 display.
 
-This branch extends [LeBruuh’s original project](https://github.com/LeBruuh/pc-monitoring-with-esp)
+This branch extends [LeBruuhâ€™s original project](https://github.com/LeBruuh/pc-monitoring-with-esp)
 from commit `1af5058029be994158c38773e0039a9596303199`. The original MIT license
 and author credit are preserved. Earlier setup instructions are archived in
 [docs/UPSTREAM_README.md](docs/UPSTREAM_README.md).
@@ -13,16 +13,19 @@ and author credit are preserved. Earlier setup instructions are archived in
 - CPU temperature through a local LibreHardwareMonitor/PawnIO reader.
 - Measured CPU package + NVIDIA board power, with session energy and cost.
 - Intel `CPU Package` and AMD `Package` power sensors; no core/package double counting.
+- Administrator-protected CPU reader and read-only telemetry for the ordinary agent.
 - Normal-priority sensor task, fresh-sample checks, and bounded retries for temporary Windows file locks.
 - Automatic USB discovery, reconnect, tray controls, and optional logon startup.
 - Partial display redraws, corrected VRAM/ESP-temperature overlap, and larger VRAM text always in Go (used/total, divided by 1024).
 - Larger Eevee sprite animations: curled asleep for green, awake for yellow, running for red.
-- Display rotation 3 (180° from the upstream landscape view) and GPIO32 backlight.
+- Display rotation 3 (180Â° from the upstream landscape view) and GPIO32 backlight.
 
-The Windows source reports agent version 4; the ESP32 reports firmware version 6.
+The Windows source reports agent version 5; the ESP32 reports firmware version 6.
 They use the same semicolon-delimited serial protocol at 115200 baud.
 
 ## Windows setup and building
+
+For existing installations, see [security migration](docs/SECURITY_CHANGES.md).
 
 See [docs/WINDOWS.md](docs/WINDOWS.md) for source execution, building the CPU
 reader and portable application, sensor-task installation, and diagnostics.
@@ -47,7 +50,7 @@ arduino-cli lib install "TFT_eSPI@2.5.43"
 .\scripts\Build-Firmware.ps1
 ```
 
-The build uses the repository’s TFT setup explicitly, without replacing the
+The build uses the repositoryâ€™s TFT setup explicitly, without replacing the
 installed TFT_eSPI library configuration. Configure `tft.setRotation(...)`
 in the sketch for a different physical screen mounting.
 
@@ -68,11 +71,13 @@ LED and animation severity is the highest of CPU, RAM, and GPU utilization.
 ```powershell
 python -m unittest discover -s tests -p "test_*.py"
 .\scripts\Test-PowerSelection.ps1
+.\scripts\Test-InstallSecurity.ps1
 python .\scripts\prepare_assets.py
 ```
 
 Python tests cover serial frames, package power selection, missing/stale data,
-read retries, display rectangles, and sprite conversion. Firmware commands
+read retries, protected system paths, display rectangles, and sprite conversion.
+PowerShell/C# tests check privileged installation ownership and ACL policy. Firmware commands
 `@SELFTEST`, `@STATUS`, `@PETDEMO`, and `@PETLIVE` provide on-device checks.
 Read [docs/VALIDATION.md](docs/VALIDATION.md) for the scope of hardware validation.
 

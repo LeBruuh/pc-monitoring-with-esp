@@ -8,7 +8,6 @@ from datetime import datetime
 from pathlib import Path
 from PIL import Image
 import pystray
-from win10toast import ToastNotifier
 import os
 import json
 import argparse
@@ -16,6 +15,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import sys
 from cpu_sensors import read_cpu_metrics, combined_power, build_frame
+from monitor_paths import default_sensor_file, nvidia_smi
 
 # ------------------------------------------------------------
 # Hilfsfunktion für PyInstaller
@@ -37,12 +37,13 @@ APP_NAME = "Eevee-Hardware-Monitor"
 APP_DIR = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 STARTUP_LINK = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs/Startup/Eevee-Hardware-Monitor.lnk"
 
-CPU_SENSOR_FILE = Path(os.environ.get("ESP32_SENSOR_FILE", str(APP_DIR / "cpu-sensors.json")))
+CPU_SENSOR_FILE = Path(os.environ.get("ESP32_SENSOR_FILE") or default_sensor_file())
 RUNNING = True
 ser = None
 controller_connected = False
 
-toaster = ToastNotifier()
+TRAY_ICON = None
+TRAY_READY = threading.Event()
 
 
 # ------------------------------------------------------------
@@ -113,8 +114,11 @@ def find_microcontroller():
 def get_gpu_stats():
     empty = {"GPU Temp": -1, "GPU Load": -1, "VRAM Used": -1, "VRAM Total": -1, "Power": -1}
     try:
+        executable = nvidia_smi()
+        if executable is None:
+            return empty
         output = subprocess.check_output([
-            "nvidia-smi",
+            str(executable),
             "--query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw",
             "--format=csv,noheader,nounits"
         ], encoding="utf-8", creationflags=subprocess.CREATE_NO_WINDOW, timeout=5)
@@ -213,12 +217,21 @@ def create_menu():
 
 
 def start_tray():
+    global TRAY_ICON
     icon = pystray.Icon(
         APP_NAME,
         load_icon(),
         menu=create_menu()
     )
-    icon.run()
+    TRAY_ICON = icon
+    def ready(tray):
+        tray.visible = True
+        TRAY_READY.set()
+    try:
+        icon.run(setup=ready)
+    finally:
+        TRAY_READY.clear()
+        TRAY_ICON = None
 
 
 # ------------------------------------------------------------
@@ -227,8 +240,9 @@ def start_tray():
 def notify(message):
     logging.info(message)
     try:
-        if not toaster.notification_active():
-            toaster.show_toast(APP_NAME, message, icon_path=str(TOAST_ICON), duration=3, threaded=True)
+        icon = TRAY_ICON
+        if icon is not None and TRAY_READY.is_set() and icon.HAS_NOTIFICATION:
+            icon.notify(message, APP_NAME)
     except Exception:
         logging.debug("Notification Windows indisponible", exc_info=True)
 
@@ -261,7 +275,8 @@ def main():
         cpu = read_cpu_metrics(CPU_SENSOR_FILE)
         gpu = get_gpu_stats()
         report = {
-            "agent_version": 4,
+            "agent_version": 5,
+            "cpu_sensor_file": str(CPU_SENSOR_FILE),
             "python": sys.version.split()[0],
             "cpu_percent": psutil.cpu_percent(interval=.2),
             "ram_percent": psutil.virtual_memory().percent,

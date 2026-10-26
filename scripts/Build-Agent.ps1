@@ -13,6 +13,6 @@ $app=Join-Path $distribution 'EeveeMonitor'
 $sensorDestination=Join-Path $app 'sensors'
 New-Item -ItemType Directory -Force -Path $sensorDestination | Out-Null
 Get-ChildItem -LiteralPath $sensorDirectory -File | Where-Object {$_.Extension -in '.exe','.dll','.cs'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $sensorDestination -Force}
-foreach($name in @('Installer_capteur_CPU.cmd','Installer_capteur_CPU.ps1')){Copy-Item -LiteralPath (Join-Path $source $name) -Destination $app -Force}
+foreach($name in @('Installer_capteur_CPU.cmd','Installer_capteur_CPU.ps1','SensorInstallSecurity.psm1')){Copy-Item -LiteralPath (Join-Path $source $name) -Destination $app -Force}
 Copy-Item -LiteralPath (Join-Path $repoRoot 'docs\WINDOWS.md') -Destination (Join-Path $app 'LIRE_AVANT_UTILISATION.md') -Force
 Write-Output ('Portable agent built in '+$app)
